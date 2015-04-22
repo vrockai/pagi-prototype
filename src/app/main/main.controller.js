@@ -1,58 +1,117 @@
 'use strict';
+var mod = angular.module('pagiPrototype');
 
-angular.module('pagiPrototype')
-  .controller('MainCtrl', function ($scope) {
-    $scope.awesomeThings = [
+mod.controller('MainCtrl', function ($scope, $resource, linkHeaderParser) {
+
+  $scope.offset = 0;
+  $scope.perPage = 10;
+  $scope.maxPages = 5;
+  $scope.paginationPages = [];
+
+  function setScopeResouces(data, headers){
+    console.log(data, headers);
+    $scope.data = data;
+    $scope.links = linkHeaderParser.parseLink(headers().link);
+    console.log('links', $scope.links);
+    $scope.headers = headers();
+    $scope.total = headers()['x-total-count'];
+  }
+
+  $scope.pageChanged = function(){
+    console.log('current page ', $scope.currentPage);
+    $scope.goTo($scope.currentPage);
+  };
+
+  function renderPaginationPages() {
+    var pages = $scope.total / $scope.perPage;
+
+    $scope.paginationPages = [];
+
+    for (var i = 0; i < $scope.maxPages; i++){
+
+    }
+  }
+
+  $resource('http://localhost:8080/api/data?page=0&per_page='+$scope.perPage).query({}, setScopeResouces);
+
+  $scope.goTo = function(pageNumber) {
+    $resource('http://localhost:8080/api/data?page=' + (pageNumber-1) + '&per_page='+$scope.perPage).query(
+      {},
+      setScopeResouces
+    );
+  };
+
+  $scope.prev = function(){
+    if ($scope.links.rels.prev) {
+      console.log('going prev', $scope.links.rels.prev);
+      $resource($scope.links.rels.prev.href).query({}, setScopeResouces);
+    } else {
+      console.log('no prev link');
+    }
+  };
+
+  $scope.next = function(){
+    if ($scope.links.rels.next) {
+      console.log('going next', $scope.links.rels.next);
+      $resource($scope.links.rels.next.href).query({}, setScopeResouces);
+    } else {
+      console.log('no next link');
+    }
+  };
+
+});
+
+mod.factory('hkPagination', function(){
+  return {};
+});
+
+mod.factory('linkHeaderParser', function(){
+  var linkexp=/<[^>]*>\s*(\s*;\s*[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*")))*(,|$)/g;
+  var paramexp=/[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*"))/g;
+
+  function unquote(value)
+  {
+    if (value.charAt(0) == '"' && value.charAt(value.length - 1) == '"') return value.substring(1, value.length - 1);
+    return value;
+  }
+
+  function parseLinkHeader(value)
+  {
+    var matches = value.match(linkexp);
+    var rels = new Object();
+    var titles = new Object();
+    for (var i = 0; i < matches.length; i++)
+    {
+      var split = matches[i].split('>');
+      var href = split[0].substring(1);
+      var ps = split[1];
+      var link = new Object();
+      link.href = href;
+      var s = ps.match(paramexp);
+      for (var j = 0; j < s.length; j++)
       {
-        'title': 'AngularJS',
-        'url': 'https://angularjs.org/',
-        'description': 'HTML enhanced for web apps!',
-        'logo': 'angular.png'
-      },
-      {
-        'title': 'BrowserSync',
-        'url': 'http://browsersync.io/',
-        'description': 'Time-saving synchronised browser testing.',
-        'logo': 'browsersync.png'
-      },
-      {
-        'title': 'GulpJS',
-        'url': 'http://gulpjs.com/',
-        'description': 'The streaming build system.',
-        'logo': 'gulp.png'
-      },
-      {
-        'title': 'Jasmine',
-        'url': 'http://jasmine.github.io/',
-        'description': 'Behavior-Driven JavaScript.',
-        'logo': 'jasmine.png'
-      },
-      {
-        'title': 'Karma',
-        'url': 'http://karma-runner.github.io/',
-        'description': 'Spectacular Test Runner for JavaScript.',
-        'logo': 'karma.png'
-      },
-      {
-        'title': 'Protractor',
-        'url': 'https://github.com/angular/protractor',
-        'description': 'End to end test framework for AngularJS applications built on top of WebDriverJS.',
-        'logo': 'protractor.png'
-      },
-      {
-        'title': 'Bootstrap',
-        'url': 'http://getbootstrap.com/',
-        'description': 'Bootstrap is the most popular HTML, CSS, and JS framework for developing responsive, mobile first projects on the web.',
-        'logo': 'bootstrap.png'
-      },
-      {
-        'title': 'Angular UI Bootstrap',
-        'url': 'http://angular-ui.github.io/bootstrap/',
-        'description': 'Bootstrap components written in pure AngularJS by the AngularUI Team.',
-        'logo': 'ui-bootstrap.png'
+        var p = s[j];
+        var paramsplit = p.split('=');
+        var name = paramsplit[0];
+        link[name] = unquote(paramsplit[1]);
       }
-    ];
-    angular.forEach($scope.awesomeThings, function(awesomeThing) {
-      awesomeThing.rank = Math.random();
-    });
-  });
+
+      if (link.rel != undefined)
+      {
+        rels[link.rel] = link;
+      }
+      if (link.title != undefined)
+      {
+        titles[link.title] = link;
+      }
+    }
+    var linkheader = new Object();
+    linkheader.rels = rels;
+    linkheader.titles = titles;
+    return linkheader;
+  }
+
+  return {
+    parseLink: parseLinkHeader
+  }
+});

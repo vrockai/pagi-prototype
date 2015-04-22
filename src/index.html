@@ -18,6 +18,41 @@
     <!-- css files will be automatically insert here -->
     <!-- endinject -->
     <!-- endbuild -->
+    <style>
+      li.even {
+        background-color: #e0e0e0;
+      }
+
+      li.even > img.avatar {
+        border-color: #ffffff;
+      }
+
+      img.avatar {
+        display: inline-block;
+        vertical-align: top;
+        border: solid #e0e0e0 10px;
+      }
+
+      ul > li {
+        list-style: none;
+        margin-bottom: 5px;
+        padding: 10px;
+      }
+
+      ul li span {
+        float:right;
+        font-size: 24px;
+      }
+
+      ul li span b {
+        color: #e0e0e0;
+      }
+
+      ul li.even span b {
+        color: #ffffff;
+      }
+
+    </style>
   </head>
   <body>
     <!--[if lt IE 10]>
@@ -25,37 +60,49 @@
     <![endif]-->
 
     <div class="container" ng-controller="MainCtrl">
+      <div>
+        <h1 class="text-center">Pagination prototype:</h1>
+        <div class="text-center">
+          <pagination boundary-links="true" total-items="total" ng-model="currentPage" class="pagination"
+                      previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"
+                      ng-change="pageChanged()"></pagination>
+          <!--ul class="pagination">
+            <li ng-show="links.rels.prev">
+              <a href="#" ng-click="prev()">
+                <span class="i fa fa-angle-left"></span>
+              </a>
+            </li>
+            <li>
+              <a href="#">1</a>
+            </li>
+            <li>
+              <a href="#">2</a>
+            </li>
+            <li>
+              <a href="#">3</a>
+            </li>
+            <li>
+              <a href="#">4</a>
+            </li>
+            <li>
+              <a href="#">5</a>
+            </li>
+            <li ng-show="links.rels.next">
+              <a href="#" ng-click="next()">
+                <span class="i fa fa-angle-right"></span>
+              </a>
+            </li>
+          </ul-->
+        </div>
 
-      <div ng-include="'app/components/navbar/navbar.html'"></div>
-
-      <div class="jumbotron text-center">
-        <h1>Pagination prototype:</h1>
-
-        <ul class="pagination">
-          <li>
-            <a href="#">
-              <span class="i fa fa-angle-left"></span>
-            </a>
-          </li>
-          <li>
-            <a href="#">1</a>
-          </li>
-          <li>
-            <a href="#">2</a>
-          </li>
-          <li>
-            <a href="#">3</a>
-          </li>
-          <li>
-            <a href="#">4</a>
-          </li>
-          <li>
-            <a href="#">5</a>
-          </li>
-          <li>
-            <a href="#">
-              <span class="i fa fa-angle-right"></span>
-            </a>
+        <ul>
+          <li ng-repeat="item in data" ng-class-even="'even'">
+            <img src="{{item.avatar}}" width="64px" class="avatar"/>
+            <div style="display: inline-block;">
+              <b>Name: </b> {{item.name}}<br>
+              <b>Email: </b> {{item.email}}<br>
+            </div>
+            <span><b>ID: </b> {{item.id}}<br></span>
           </li>
         </ul>
       </div>
